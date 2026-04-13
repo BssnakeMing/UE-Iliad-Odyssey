@@ -1,7 +1,0 @@
-{
-	"OutputFiles": [
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyMaths\\OdysseyMathsModule.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyMaths\\OdysseyRectMerge.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyMaths\\OdysseyRectUtils.cpp.obj"
-	]
-}

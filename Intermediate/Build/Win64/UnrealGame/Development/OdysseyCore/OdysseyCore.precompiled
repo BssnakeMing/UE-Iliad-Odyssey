@@ -1,9 +1,0 @@
-{
-	"OutputFiles": [
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyCore\\Module.OdysseyCore.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyCore\\OdysseyCoreModule.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyCore\\OdysseyPoint.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyCore\\OdysseyRay.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyCore\\OdysseyObjectPropertyTracker.cpp.obj"
-	]
-}

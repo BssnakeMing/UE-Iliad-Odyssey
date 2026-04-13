@@ -1,7 +1,0 @@
-{
-	"OutputFiles": [
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyRuntimeImaging\\Module.OdysseyRuntimeImaging.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyRuntimeImaging\\OdysseyRuntimeImagingModule.cpp.obj",
-		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyRuntimeImaging\\OdysseyRuntimePaintCanvas.cpp.obj"
-	]
-}
