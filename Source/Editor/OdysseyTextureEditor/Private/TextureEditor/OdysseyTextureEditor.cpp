@@ -1,0 +1,310 @@
+// IDDN.FR.001.250001.006.S.P.2019.000.00000
+// ILIAD is subject to copyright laws and is the legal and intellectual property of Praxinos,Inc - Year of publishing 2022
+
+#include "TextureEditor/OdysseyTextureEditor.h"
+
+#include "TextureEditor/OdysseyTextureEditorGUI.h"
+#include "OdysseyLayerFunctionLibrary.h"
+#include "LayerStack/OdysseyTextureLayerStack.h"
+#include "LayerStack/OdysseyTextureLayerImageRaster.h"
+#include "OdysseyPaintEngine.h"
+#include "OdysseyBlendParameters.h"
+#include "ULISLoaderModule.h"
+
+
+#define LOCTEXT_NAMESPACE "OdysseyTextureEditor"
+
+/////////////////////////////////////////////////////
+// FOdysseyTextureEditor
+//--------------------------------------------------------------------------------------
+//----------------------------------------------------------- Construction / Destruction
+FOdysseyTextureEditor::~FOdysseyTextureEditor()
+{
+	UOdysseyLayerStack::OnCurrentLayerChanged().RemoveAll(this);
+	SetTexture(nullptr);
+}
+
+FOdysseyTextureEditor::FOdysseyTextureEditor() :
+	FOdysseyPainterEditor(),
+	mTexture(nullptr),
+	mGUI(nullptr),
+	mRasterDrawingTool(nullptr),
+	mPaintBucketTool(nullptr)
+{
+	UOdysseyLayerStack::OnCurrentLayerChanged().AddRaw(this, &FOdysseyTextureEditor::OnCurrentLayerChanged);
+}
+
+//--------------------------------------------------------------------------------------
+//----------------------------------------------------------------------- Initialization
+
+void
+FOdysseyTextureEditor::InitData(UObject* iEditedObject)
+{
+	
+	UTexture2D* texture = Cast<UTexture2D>(iEditedObject);
+	if (texture)
+		SetTexture(texture);
+
+	//Call it there so that tools are initialized after basic data
+	FOdysseyPainterEditor::InitData(iEditedObject);
+}
+
+void
+FOdysseyTextureEditor::InitTools()
+{
+	mRasterDrawingTool = NewObject<UOdysseyTextureEditorRasterDrawingTool>();
+	mPaintBucketTool = NewObject<UOdysseyTextureEditorPaintBucketTool>();
+
+	mRasterDrawingTool->SetEditor(this);
+	mPaintBucketTool->SetEditor(this);
+	mRasterDrawingTool->SetBrushContexts(mBrushContexts);
+
+	mTools.Add(mRasterDrawingTool);
+	mTools.Add(mPaintBucketTool);
+	//mTextureRasterDrawingTool->OnApplyOverridesDelegate().AddRaw(this, &FOdysseyPainterEditor::OnApplyOverrides);
+}
+
+void
+FOdysseyTextureEditor::BindShortcuts(FBaseToolkit* iToolkit)
+{
+	FOdysseyPainterEditor::BindShortcuts(iToolkit);
+	mRasterDrawingTool->BindShortcuts(iToolkit);
+	mPaintBucketTool->BindShortcuts(iToolkit);
+}
+
+void
+FOdysseyTextureEditor::ExtendMenu( FToolMenuOwner iOwner, FName iMenuName )
+{
+	FOdysseyPainterEditor::ExtendMenu(iOwner, iMenuName);
+	mRasterDrawingTool->ExtendMenu(iOwner, iMenuName);
+	mPaintBucketTool->ExtendMenu(iOwner, iMenuName);
+}
+
+//--------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------ Getters
+
+void
+FOdysseyTextureEditor::SetTexture(UTexture2D* iTexture)
+{
+	if (mSelectedTool)
+		mSelectedTool->Inactivate();
+
+    //Inactivate Fast Update
+	UOdysseyTextureLayerStack* layerStack = LayerStack();
+	if ( layerStack )
+		layerStack->InactivateTextureFastUpdate();
+
+	//Set the texture
+    mTexture = iTexture;
+	if ( !mTexture )
+	{
+		SetSelectedTool(nullptr);
+		mLayerStackPreloadHandle = nullptr;
+		return;
+	}
+
+	layerStack = LayerStack();
+	if ( layerStack )
+	{
+		//Do it in 3 lines to avoid unexpected handles destruction in the process
+		mLayerStackPreloadHandle = layerStack->Preload();
+		
+		layerStack->ActivateTextureFastUpdate();
+	}
+
+	if ( mSelectedTool && mSelectedTool->IsActivable() )
+	{
+		//just reload the tool
+		mSelectedTool->Inactivate();
+		mSelectedTool->Activate();
+	}
+	else
+	{
+		//select the best tool
+		SelectDefaultTool();
+	}
+}
+
+UTexture2D*
+FOdysseyTextureEditor::Texture() const
+{
+	return mTexture;
+}
+
+UOdysseyTextureLayerStack*
+FOdysseyTextureEditor::LayerStack() const
+{
+	UOdysseyTextureLayerStackUserData* userData = TextureUserData();
+	if (!userData)
+		return nullptr;
+	
+	return userData->GetLayerStack();
+}
+
+UTexture*
+FOdysseyTextureEditor::DisplayTexture() const
+{
+	return mTexture;
+}
+
+TSharedPtr<::ULIS::FBlock, ESPMode::ThreadSafe>
+FOdysseyTextureEditor::GetDisplayBlock()
+{
+	UOdysseyTextureLayerStack* layerStack = LayerStack();
+	if (!layerStack)
+		return nullptr;
+
+	return layerStack->GetSurface()->Block();
+}
+
+UOdysseyTextureLayerStackUserData*
+FOdysseyTextureEditor::TextureUserData() const
+{
+	if ( !mTexture )
+		return nullptr;
+
+    UOdysseyTextureLayerStackUserData* userData = Cast<UOdysseyTextureLayerStackUserData>(mTexture->GetAssetUserDataOfClass(UOdysseyTextureLayerStackUserData::StaticClass()));
+    if (userData)
+        return userData;
+
+    //Init user data
+	userData = NewObject<UOdysseyTextureLayerStackUserData>(mTexture, NAME_None, RF_Public);
+    userData->InitWithDefaultLayerStack();
+
+    // Notify for changes
+    mTexture->AddAssetUserData( userData );
+    mTexture->PostEditChange();
+    return userData;
+}
+
+UOdysseyTextureEditorRasterDrawingTool*
+FOdysseyTextureEditor::GetRasterDrawingTool() const
+{
+	return mRasterDrawingTool;
+}
+
+UOdysseyTextureEditorPaintBucketTool*
+FOdysseyTextureEditor::GetPaintBucketTool() const
+{
+	return mPaintBucketTool;
+}
+
+//--------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------- Overrides
+
+bool
+FOdysseyTextureEditor::OnCloseRequested()
+{
+	SetTexture(nullptr); //close properly the currently loaded texture
+	return true;
+}
+
+FOdysseyTextureEditorGUI*
+FOdysseyTextureEditor::GetGUI()
+{
+	if (!mGUI)
+		mGUI = MakeShareable(new FOdysseyTextureEditorGUI(this));
+	return mGUI.Get();
+}
+
+TSharedPtr<FWorkspaceItem>
+FOdysseyTextureEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& iTabManager)
+{
+    TSharedPtr<FWorkspaceItem> workspaceMenuCategory = iTabManager->AddLocalWorkspaceMenuCategory(LOCTEXT("WorkspaceMenu_OdysseyTextureEditor", "Odyssey Texture2D Editor"));
+	TSharedRef<FWorkspaceItem> workspaceMenuCategoryRef = workspaceMenuCategory.ToSharedRef();
+	GetGUI()->RegisterTabSpawners(iTabManager, workspaceMenuCategoryRef);
+	return workspaceMenuCategory;
+}
+
+//--------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------- Events
+
+void
+FOdysseyTextureEditor::OnCurrentLayerChanged(UOdysseyLayerStack* iLayerStack)
+{
+	//TODO: Maybe this should be done differently later, but we don't have time for that now
+	if (iLayerStack == LayerStack())
+		SelectDefaultTool(); //Refresh the current tool when we change layer
+}
+
+//--------------------------------------------------------------------------------------
+//------------------------------------------------------------- FGCObject implementation
+
+void
+FOdysseyTextureEditor::AddReferencedObjects(FReferenceCollector& Collector)
+{
+	FOdysseyPainterEditor::AddReferencedObjects(Collector);
+	Collector.AddReferencedObject(mRasterDrawingTool);
+	Collector.AddReferencedObject(mPaintBucketTool);
+}
+
+
+void FOdysseyTextureEditor::ClearCurrentLayer()
+{	
+    UOdysseyTextureLayerStack* layerStack = LayerStack();
+    if (!layerStack)
+        return;
+
+    bool isActive = UOdysseyLayerFunctionLibrary::IsLayerActivatedInStack(layerStack->CurrentLayer.Get());
+    bool isLocked = UOdysseyLayerFunctionLibrary::IsLayerLockedInStack(layerStack->CurrentLayer.Get());
+    if (!isActive || isLocked)
+        return;
+
+    UOdysseyTextureLayerImageRaster* editedBlock = Cast<UOdysseyTextureLayerImageRaster>(layerStack->CurrentLayer.Get());
+
+    if (!editedBlock || !editedBlock->GetRasterBlock())
+        return;
+
+    const FScopedTransaction Transaction(LOCTEXT("ClearLayer", "Clear Layer"));
+
+	FVector2D sizeRect = FVector2D( editedBlock->GetRasterBlock()->GetWidth(), editedBlock->GetRasterBlock()->GetHeight() );
+	FOdysseyRasterBlockMutator mutator = FOdysseyRasterBlockMutator(editedBlock->GetRasterBlock());
+	mutator.EditTilesFromRects( 
+		{::ULIS::FRectI::FromXYWH( 0, 0, sizeRect.X, sizeRect.Y )},
+		FOdysseyRasterBlockMutator::FEditDelegate::CreateLambda([&, editedBlock](const FULISInvalidTileMap& iTileMap )
+		{
+			TSharedPtr<::ULIS::FBlock, ESPMode::ThreadSafe> block = editedBlock->GetRasterBlock()->GetBlock();
+            ::ULIS::eFormat format = block->Format();
+            ::ULIS::FContext& ctx = IULISLoaderModule::StaticFindOrAddContext(format);
+            ctx.Clear(*block);
+            ctx.Finish();
+		})
+	);
+}
+
+
+void FOdysseyTextureEditor::FillCurrentLayer()
+{
+    UOdysseyTextureLayerStack* layerStack = LayerStack();
+    if (!layerStack)
+        return;
+
+    bool isActive = UOdysseyLayerFunctionLibrary::IsLayerActivatedInStack(layerStack->CurrentLayer.Get());
+    bool isLocked = UOdysseyLayerFunctionLibrary::IsLayerLockedInStack(layerStack->CurrentLayer.Get());
+    if( !isActive || isLocked )
+		return;
+
+	UOdysseyTextureLayerImageRaster* editedBlock = Cast<UOdysseyTextureLayerImageRaster>(layerStack->CurrentLayer.Get());
+
+    if (!editedBlock || !editedBlock->GetRasterBlock())
+        return;
+
+    const FScopedTransaction Transaction(LOCTEXT("ClearLayer", "Clear Layer"));
+
+    FVector2D sizeRect = FVector2D(editedBlock->GetRasterBlock()->GetWidth(), editedBlock->GetRasterBlock()->GetHeight());
+    FOdysseyRasterBlockMutator mutator = FOdysseyRasterBlockMutator(editedBlock->GetRasterBlock());
+    mutator.EditTilesFromRects(
+        { ::ULIS::FRectI::FromXYWH(0, 0, sizeRect.X, sizeRect.Y) },
+        FOdysseyRasterBlockMutator::FEditDelegate::CreateLambda([&, editedBlock](const FULISInvalidTileMap& iTileMap)
+            {
+                TSharedPtr<::ULIS::FBlock, ESPMode::ThreadSafe> block = editedBlock->GetRasterBlock()->GetBlock();
+                ::ULIS::FColor color = PaintColor().GetValue();
+                ::ULIS::eFormat format = block->Format();
+                ::ULIS::FContext& ctx = IULISLoaderModule::StaticFindOrAddContext(format);
+                ctx.Fill(*block, color);
+                ctx.Finish();
+            })
+    );
+}
+
+#undef LOCTEXT_NAMESPACE

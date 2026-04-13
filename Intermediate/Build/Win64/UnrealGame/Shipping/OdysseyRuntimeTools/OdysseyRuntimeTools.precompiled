@@ -1,0 +1,7 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeTools\\Module.OdysseyRuntimeTools.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeTools\\OdysseyRuntimeToolAlgorithms.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeTools\\OdysseyRuntimeToolsModule.cpp.obj"
+	]
+}

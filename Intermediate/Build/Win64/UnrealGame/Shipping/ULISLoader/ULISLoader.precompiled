@@ -1,0 +1,8 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\ULISLoader\\ULISEventBuilder.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\ULISLoader\\ULISInvalidTileMap.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\ULISLoader\\ULISLoaderModule.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\ULISLoader\\ULISUtils.cpp.obj"
+	]
+}

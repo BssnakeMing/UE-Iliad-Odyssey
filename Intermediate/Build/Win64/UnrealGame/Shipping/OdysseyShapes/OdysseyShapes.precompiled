@@ -1,0 +1,15 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\Module.OdysseyShapes.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyShape.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyShapesModule.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyFreehandShape.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyFreehandShapeOverrides.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\IOdysseyInterpolation.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyInterpolationBezier.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseyInterpolationCatmullRom.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\IOdysseySmoothing.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseySmoothingAverage.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyShapes\\OdysseySmoothingPull.cpp.obj"
+	]
+}

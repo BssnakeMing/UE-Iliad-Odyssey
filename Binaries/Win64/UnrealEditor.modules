@@ -1,0 +1,35 @@
+{
+	"BuildId": "33043543",
+	"Modules": 
+	{
+		"OdysseyBrush": "UnrealEditor-OdysseyBrush.dll",
+		"OdysseyBrushEditor": "UnrealEditor-OdysseyBrushEditor.dll",
+		"OdysseyContentBrowserExtensions": "UnrealEditor-OdysseyContentBrowserExtensions.dll",
+		"OdysseyCore": "UnrealEditor-OdysseyCore.dll",
+		"OdysseyEditor": "UnrealEditor-OdysseyEditor.dll",
+		"OdysseyEditorBrushBlueprints": "UnrealEditor-OdysseyEditorBrushBlueprints.dll",
+		"OdysseyFlipbook": "UnrealEditor-OdysseyFlipbook-0010.dll",
+		"OdysseyFlipbookEditor": "UnrealEditor-OdysseyFlipbookEditor-0010.dll",
+		"OdysseyHUDSystem": "UnrealEditor-OdysseyHUDSystem.dll",
+		"OdysseyImaging": "UnrealEditor-OdysseyImaging.dll",
+		"OdysseyLayerStack": "UnrealEditor-OdysseyLayerStack.dll",
+		"OdysseyLayerStackEditor": "UnrealEditor-OdysseyLayerStackEditor.dll",
+		"OdysseyMaths": "UnrealEditor-OdysseyMaths.dll",
+		"OdysseyModuleLoader": "UnrealEditor-OdysseyModuleLoader.dll",
+		"OdysseyPaintEngine": "UnrealEditor-OdysseyPaintEngine.dll",
+		"OdysseyPainterEditor": "UnrealEditor-OdysseyPainterEditor.dll",
+		"OdysseyRuntimeImaging": "UnrealEditor-OdysseyRuntimeImaging.dll",
+		"OdysseyRuntimePaintEngine": "UnrealEditor-OdysseyRuntimePaintEngine.dll",
+		"OdysseyRuntimeTools": "UnrealEditor-OdysseyRuntimeTools.dll",
+		"OdysseyRuntimeWidgets": "UnrealEditor-OdysseyRuntimeWidgets.dll",
+		"OdysseyShapes": "UnrealEditor-OdysseyShapes.dll",
+		"OdysseyShapesEditor": "UnrealEditor-OdysseyShapesEditor.dll",
+		"OdysseyStyle": "UnrealEditor-OdysseyStyle.dll",
+		"OdysseyStylusInput": "UnrealEditor-OdysseyStylusInput.dll",
+		"OdysseyTexture": "UnrealEditor-OdysseyTexture.dll",
+		"OdysseyTextureEditor": "UnrealEditor-OdysseyTextureEditor.dll",
+		"OdysseyViewportDrawingEditor": "UnrealEditor-OdysseyViewportDrawingEditor.dll",
+		"OdysseyWidgets": "UnrealEditor-OdysseyWidgets.dll",
+		"ULISLoader": "UnrealEditor-ULISLoader.dll"
+	}
+}

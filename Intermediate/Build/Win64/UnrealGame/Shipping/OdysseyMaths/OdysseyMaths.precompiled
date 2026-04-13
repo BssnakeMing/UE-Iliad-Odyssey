@@ -1,0 +1,7 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyMaths\\OdysseyMathsModule.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyMaths\\OdysseyRectMerge.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyMaths\\OdysseyRectUtils.cpp.obj"
+	]
+}

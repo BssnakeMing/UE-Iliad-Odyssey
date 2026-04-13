@@ -1,0 +1,8 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyEditorBrushBlueprints\\Module.OdysseyEditorBrushBlueprints.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyEditorBrushBlueprints\\OdysseyEditorBrushBlueprints.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyEditorBrushBlueprints\\OdysseyPainterEditorFunctionLibrary.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyEditorBrushBlueprints\\OdysseyTextureEditorFunctionLibrary.cpp.obj"
+	]
+}

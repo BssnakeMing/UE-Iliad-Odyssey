@@ -1,0 +1,13 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\Module.OdysseyRuntimeWidgets.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyPaintWidget.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimeBrushSelectorWidget.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimeColorWheelWidget.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimePaintViewModel.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimeToolOptionsWidget.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimeToolsWidget.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\OdysseyRuntimeWidgetsModule.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\OdysseyRuntimeWidgets\\SOdysseyPaintSurface.cpp.obj"
+	]
+}

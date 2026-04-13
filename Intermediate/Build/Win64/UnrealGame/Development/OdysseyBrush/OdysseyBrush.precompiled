@@ -1,0 +1,20 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\Module.OdysseyBrush.1.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\Module.OdysseyBrush.2.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushAssetBase.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushBlueprint.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushContext.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushModule.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushOptions.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushViewportContext.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushBlock.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushColor.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushFormat.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushMath.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushPivot.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushRect.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushShape.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\OdysseyBrush\\OdysseyBrushTransform.cpp.obj"
+	]
+}
