@@ -834,7 +834,12 @@ UOdysseyBrushAssetBase::Stamp( FOdysseyBlockProxy Sample, FOdysseyPivot Pivot, f
     params.mBlendingMode = BlendingMode;
     params.mAlphaMode = AlphaMode;
 
-    ctx.Finish();
+    if (bStampOverrideRequiresCPURead)
+    {
+        // Some custom overrides may need immediate CPU access to stamp inputs.
+        // Keep sync as an opt-in path to avoid stalling the main thread by default.
+        ctx.Finish();
+    }
 
     if (mStampOverrideDelegate.IsBound())
     {
@@ -845,7 +850,10 @@ UOdysseyBrushAssetBase::Stamp( FOdysseyBlockProxy Sample, FOdysseyPivot Pivot, f
         eventStampInternal = StampInternal(params);
     }
 
-    ctx.Dummy_OP(1, &eventStampInternal, &eventCleanup);
+    // Keep cleanup dependent on both conversion/input readiness and stamp completion.
+    // This preserves correctness even if an override forgets to chain iStampParams.mEvent.
+    ::ULIS::FEvent eventCleanupDependencies[] = { eventConv, eventStampInternal };
+    ctx.Dummy_OP(2, eventCleanupDependencies, &eventCleanup);
 
     mEvent = eventCleanup;
 }

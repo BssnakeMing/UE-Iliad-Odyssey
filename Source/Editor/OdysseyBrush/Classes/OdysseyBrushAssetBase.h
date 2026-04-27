@@ -129,6 +129,10 @@ public:
     // Sets the Stroke Options the Paint Engine will use to draw a stroke
     void SetBrushOptions( UOdysseyBrushOptions* iBrushOptions );
 
+    // If true, Stamp() will block on ULIS context completion before executing stamp override.
+    // Use this only for override paths that must read CPU data from stamp inputs immediately.
+    void SetStampOverrideRequiresCPURead(bool bInRequiresCPURead) { bStampOverrideRequiresCPURead = bInRequiresCPURead; }
+
     // Sets the block on which the brush is drawing
     void SetBlock(TSharedPtr<::ULIS::FBlock, ESPMode::ThreadSafe> mEditedBlock);
 
@@ -460,6 +464,7 @@ private:
     TArray<::ULIS::FRectI>                  mInvalidRects;
     ::ULIS::FEvent                          mEvent;
     FStampOverrideDelegate                  mStampOverrideDelegate;
+    bool                                    bStampOverrideRequiresCPURead = false;
 };
 
 template<class T> T*

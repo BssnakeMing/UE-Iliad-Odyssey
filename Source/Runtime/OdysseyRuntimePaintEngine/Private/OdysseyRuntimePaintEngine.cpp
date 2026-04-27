@@ -128,7 +128,7 @@ void FOdysseyRuntimePaintEngine::SetBrushAsset(UOdysseyBrushAssetBase* InBrushAs
 
 UOdysseyBrushAssetBase* FOdysseyRuntimePaintEngine::GetBrushAsset() const
 {
-    return BrushAssetTemplate.Get();
+    return BrushInstance.Get();
 }
 
 void FOdysseyRuntimePaintEngine::SetHistoryLimit(int32 InHistoryLimit)

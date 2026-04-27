@@ -33,6 +33,9 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Odyssey|Paint")
     UOdysseyRuntimePaintViewModel* GetViewModel() const { return ViewModel; }
+    
+    UFUNCTION(BlueprintPure, Category = "Odyssey|Paint")
+    UOdysseyBrushAssetBase* GetPaintEngineBrushAsset() const { return PaintEngine.GetBrushAsset();}
 
     UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
     void BeginStroke(const FVector2D& LocalPosition);
