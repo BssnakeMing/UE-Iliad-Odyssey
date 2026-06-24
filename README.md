@@ -12,8 +12,6 @@ https://praxinos.coop/forum/ (作者工作室的网址)
 
 支持UE5.4.其他版本没试过，
 
-缺点：我无法解决由Brush绘制导致的卡顿
-
 # Iliad Runtime Widget 使用流程与方法
 
 ## 1. 目标
