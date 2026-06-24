@@ -34,6 +34,11 @@ bool UOdysseyRuntimeBrushSelectorWidget::SelectPreviousBrush()
     return SelectBrushByOffset(-1);
 }
 
+UOdysseyBrushAssetBase* UOdysseyRuntimeBrushSelectorWidget::GetBrushAsset()
+{
+    return RuntimeBrushPresetInstances[0].Get();
+}
+
 TSharedRef<SWidget> UOdysseyRuntimeBrushSelectorWidget::RebuildWidget()
 {
     TSharedRef<SVerticalBox> Root = SNew(SVerticalBox)

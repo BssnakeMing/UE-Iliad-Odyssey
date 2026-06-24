@@ -38,9 +38,11 @@ public:
 
     void SetPixels(const TArray<FColor>& InPixels);
     void CommitToTexture();
+    void CommitToTextureRegion(const FIntRect& InRegion);
 
 private:
     void EnsureTexture();
+    FIntRect ClampRegion(const FIntRect& InRegion) const;
     static FColor ToColor(const FLinearColor& InColor);
 
 private:

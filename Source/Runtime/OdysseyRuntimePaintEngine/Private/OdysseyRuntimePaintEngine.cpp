@@ -61,6 +61,7 @@ void FOdysseyRuntimePaintEngine::SetCanvas(UOdysseyRuntimePaintCanvas* InCanvas)
     UndoStack.Reset();
     RedoStack.Reset();
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     StrokeStartPixels.Reset();
     bToolSettingsApplied = false;
@@ -120,6 +121,7 @@ void FOdysseyRuntimePaintEngine::SetBrushAsset(UOdysseyBrushAssetBase* InBrushAs
     BrushOptions.Reset();
     BrushViewportContext.Reset();
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     bShapeStrokeActive = false;
     StrokeStartPixels.Reset();
@@ -189,6 +191,7 @@ void FOdysseyRuntimePaintEngine::BeginStroke(const FVector2D& NormalizedPosition
     }
 
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     ApplyBrushLikeStroke(PixelPoint);
 }
@@ -236,6 +239,7 @@ void FOdysseyRuntimePaintEngine::EndStroke(const FVector2D& NormalizedPosition)
         BrushInstance->StrokeEnd();
         SyncBlockToCanvasPixels();
         BrushWorkingBlock.Reset();
+        BrushDirtyRects.Reset();
         LastBrushPoint.Reset();
         StrokeStartPixels.Reset();
     }
@@ -259,6 +263,7 @@ void FOdysseyRuntimePaintEngine::Clear(const FLinearColor& InColor)
     bShapeStrokeActive = false;
     DistanceSinceLastStamp = 0.0f;
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     StrokeStartPixels.Reset();
 }
@@ -281,6 +286,7 @@ bool FOdysseyRuntimePaintEngine::Undo()
     bShapeStrokeActive = false;
     DistanceSinceLastStamp = 0.0f;
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     StrokeStartPixels.Reset();
     return true;
@@ -304,9 +310,15 @@ bool FOdysseyRuntimePaintEngine::Redo()
     bShapeStrokeActive = false;
     DistanceSinceLastStamp = 0.0f;
     BrushWorkingBlock.Reset();
+    BrushDirtyRects.Reset();
     LastBrushPoint.Reset();
     StrokeStartPixels.Reset();
     return true;
+}
+
+void FOdysseyRuntimePaintEngine::SetCustomPressure(const float& InPressure)
+{
+    CustomPressure = InPressure;
 }
 
 bool FOdysseyRuntimePaintEngine::EnsureCanvas() const
@@ -346,7 +358,8 @@ void FOdysseyRuntimePaintEngine::ApplyBrushLikeStroke(const FIntPoint& Point)
     UOdysseyRuntimePaintCanvas* CanvasPtr = Canvas.Get();
     const bool bEraserMode = ActiveTool == EOdysseyRuntimePaintTool::Eraser;
 
-    FOdysseyRuntimeToolAlgorithms::DrawLine(
+    FIntRect DirtyRegion(0, 0, 0, 0);
+    const bool bDrew = FOdysseyRuntimeToolAlgorithms::DrawLine(
         CanvasPtr->GetMutablePixels(),
         CanvasPtr->GetCanvasWidth(),
         CanvasPtr->GetCanvasHeight(),
@@ -354,10 +367,14 @@ void FOdysseyRuntimePaintEngine::ApplyBrushLikeStroke(const FIntPoint& Point)
         Point,
         ToolSettings,
         bEraserMode,
-        DistanceSinceLastStamp);
+        DistanceSinceLastStamp,
+        &DirtyRegion);
 
     LastStrokePoint = Point;
-    CanvasPtr->CommitToTexture();
+    if (bDrew)
+    {
+        CanvasPtr->CommitToTextureRegion(DirtyRegion);
+    }
 }
 
 bool FOdysseyRuntimePaintEngine::EnsureBrushInstance()
@@ -476,6 +493,8 @@ bool FOdysseyRuntimePaintEngine::PrepareBrushStrokeSession()
     {
         return false;
     }
+    BrushDirtyRects.Reset();
+    BrushWorkingBlock->OnInvalid(::ULIS::FOnInvalidBlock(&FOdysseyRuntimePaintEngine::HandleWorkingBlockInvalidated, static_cast<void*>(this)));
 
     TArray<FColor>& Pixels = CanvasPtr->GetMutablePixels();
     StrokeStartPixels = Pixels;
@@ -600,13 +619,86 @@ void FOdysseyRuntimePaintEngine::SyncBlockToCanvasPixels()
         return;
     }
 
-    FMemory::Memcpy(Pixels.GetData(), BrushWorkingBlock->Bits(), PixelBytes);
-    CanvasPtr->CommitToTexture();
+    if (BrushDirtyRects.IsEmpty())
+    {
+        return;
+    }
+
+    const FIntRect Region = ToMergedCanvasRegion(BrushDirtyRects);
+    BrushDirtyRects.Reset();
+    if (Region.Width() <= 0 || Region.Height() <= 0)
+    {
+        return;
+    }
+
+    const uint8* SourceBytes = static_cast<const uint8*>(BrushWorkingBlock->Bits());
+    for (int32 Row = Region.Min.Y; Row < Region.Max.Y; ++Row)
+    {
+        const int32 PixelIndex = Row * CanvasPtr->GetCanvasWidth() + Region.Min.X;
+        FMemory::Memcpy(
+            Pixels.GetData() + PixelIndex,
+            SourceBytes + PixelIndex * sizeof(FColor),
+            Region.Width() * sizeof(FColor));
+    }
+
+    CanvasPtr->CommitToTextureRegion(Region);
+}
+
+void FOdysseyRuntimePaintEngine::HandleWorkingBlockInvalidated(const ::ULIS::FBlock* InBlock, const ::ULIS::FRectI* InRects, const uint32 InNumRects, void* InInfo)
+{
+    FOdysseyRuntimePaintEngine* PaintEngine = static_cast<FOdysseyRuntimePaintEngine*>(InInfo);
+    if (!PaintEngine || !InBlock || !InRects || InNumRects == 0)
+    {
+        return;
+    }
+
+    PaintEngine->BrushDirtyRects.Append(InRects, InNumRects);
+}
+
+FIntRect FOdysseyRuntimePaintEngine::ToCanvasRegion(const ::ULIS::FRectI& InRect) const
+{
+    const UOdysseyRuntimePaintCanvas* CanvasPtr = Canvas.Get();
+    if (!CanvasPtr)
+    {
+        return FIntRect(0, 0, 0, 0);
+    }
+
+    const int32 MinX = FMath::Clamp(InRect.x, 0, CanvasPtr->GetCanvasWidth());
+    const int32 MinY = FMath::Clamp(InRect.y, 0, CanvasPtr->GetCanvasHeight());
+    const int32 MaxX = FMath::Clamp(InRect.x + InRect.w, 0, CanvasPtr->GetCanvasWidth());
+    const int32 MaxY = FMath::Clamp(InRect.y + InRect.h, 0, CanvasPtr->GetCanvasHeight());
+    return FIntRect(MinX, MinY, MaxX, MaxY);
+}
+
+FIntRect FOdysseyRuntimePaintEngine::ToMergedCanvasRegion(const TArray<::ULIS::FRectI>& InRects) const
+{
+    FIntRect MergedRegion(0, 0, 0, 0);
+    for (const ::ULIS::FRectI& Rect : InRects)
+    {
+        const FIntRect Region = ToCanvasRegion(Rect);
+        if (Region.Width() <= 0 || Region.Height() <= 0)
+        {
+            continue;
+        }
+
+        if (MergedRegion.Width() <= 0 || MergedRegion.Height() <= 0)
+        {
+            MergedRegion = Region;
+            continue;
+        }
+
+        MergedRegion.Min.X = FMath::Min(MergedRegion.Min.X, Region.Min.X);
+        MergedRegion.Min.Y = FMath::Min(MergedRegion.Min.Y, Region.Min.Y);
+        MergedRegion.Max.X = FMath::Max(MergedRegion.Max.X, Region.Max.X);
+        MergedRegion.Max.Y = FMath::Max(MergedRegion.Max.Y, Region.Max.Y);
+    }
+
+    return MergedRegion;
 }
 
 FOdysseyPoint FOdysseyRuntimePaintEngine::MakePointFromPixel(const FIntPoint& Point, const FOdysseyPoint* PreviousPoint) const
 {
-    FOdysseyPoint Result(static_cast<float>(Point.X), static_cast<float>(Point.Y), 0.0f, 1.0f);
+    FOdysseyPoint Result(static_cast<float>(Point.X), static_cast<float>(Point.Y), 0.0f, CustomPressure);
     if (PreviousPoint)
     {
         Result.ComputeRelativeParameters(*PreviousPoint, true);
@@ -629,6 +721,8 @@ void FOdysseyRuntimePaintEngine::RestoreWorkingBlockFromStrokeStart()
     }
 
     FMemory::Memcpy(BrushWorkingBlock->Bits(), StrokeStartPixels.GetData(), StrokeBytes);
+    BrushDirtyRects.Reset();
+    BrushDirtyRects.Add(::ULIS::FRectI::FromXYWH(0, 0, BrushWorkingBlock->Width(), BrushWorkingBlock->Height()));
 }
 
 void FOdysseyRuntimePaintEngine::HandleFreehandPathBegin(const FOdysseyPoint& Point)

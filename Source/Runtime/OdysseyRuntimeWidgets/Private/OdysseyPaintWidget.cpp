@@ -97,6 +97,7 @@ void UOdysseyPaintWidget::BeginStroke(const FVector2D& LocalPosition)
     EnsureRuntimeObjects();
     PaintEngine.BeginStroke(NormalizeInput(LocalPosition));
     RefreshTextureBinding();
+    Strokeing = true;
 }
 
 void UOdysseyPaintWidget::UpdateStroke(const FVector2D& LocalPosition)
@@ -111,6 +112,7 @@ void UOdysseyPaintWidget::EndStroke(const FVector2D& LocalPosition)
     EnsureRuntimeObjects();
     PaintEngine.EndStroke(NormalizeInput(LocalPosition));
     RefreshTextureBinding();
+    Strokeing = false;
 }
 
 void UOdysseyPaintWidget::Clear()
@@ -159,6 +161,11 @@ void UOdysseyPaintWidget::SetPaintTexture(UTextureRenderTarget2D* InPaintTexture
     RefreshTextureBinding();
 }
 
+void UOdysseyPaintWidget::SetCustomPressure(float pressure)
+{
+    PaintEngine.SetCustomPressure(pressure);
+}
+
 TSharedRef<SWidget> UOdysseyPaintWidget::RebuildWidget()
 {
     EnsureRuntimeObjects();
@@ -199,6 +206,7 @@ void UOdysseyPaintWidget::ReleaseSlateResources(bool bReleaseChildren)
 {
     Super::ReleaseSlateResources(bReleaseChildren);
     PaintSurface.Reset();
+    BoundPaintSurfaceTexture.Reset();
     UnbindFromViewModel();
 }
 
@@ -372,7 +380,11 @@ void UOdysseyPaintWidget::RefreshTextureBinding()
 
     if (PaintSurface.IsValid())
     {
-        PaintSurface->SetTexture(CanvasTexture);
+        if (BoundPaintSurfaceTexture.Get() != CanvasTexture)
+        {
+            PaintSurface->SetTexture(CanvasTexture);
+            BoundPaintSurfaceTexture = CanvasTexture;
+        }
     }
 }
 

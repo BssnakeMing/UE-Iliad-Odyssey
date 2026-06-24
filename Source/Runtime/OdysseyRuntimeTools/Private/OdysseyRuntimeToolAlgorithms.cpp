@@ -17,9 +17,28 @@ namespace
 			FMath::Abs(int32(A.B) - int32(B.B)) <= Tolerance &&
 			FMath::Abs(int32(A.A) - int32(B.A)) <= Tolerance;
 	}
+
+	FORCEINLINE void IncludeDirtyRegion(FIntRect& InOutRegion, const FIntRect& Region)
+	{
+		if (Region.Width() <= 0 || Region.Height() <= 0)
+		{
+			return;
+		}
+
+		if (InOutRegion.Width() <= 0 || InOutRegion.Height() <= 0)
+		{
+			InOutRegion = Region;
+			return;
+		}
+
+		InOutRegion.Min.X = FMath::Min(InOutRegion.Min.X, Region.Min.X);
+		InOutRegion.Min.Y = FMath::Min(InOutRegion.Min.Y, Region.Min.Y);
+		InOutRegion.Max.X = FMath::Max(InOutRegion.Max.X, Region.Max.X);
+		InOutRegion.Max.Y = FMath::Max(InOutRegion.Max.Y, Region.Max.Y);
+	}
 }
 
-void FOdysseyRuntimeToolAlgorithms::DrawLine(
+bool FOdysseyRuntimeToolAlgorithms::DrawLine(
 	TArray<FColor>& Pixels,
 	int32 Width,
 	int32 Height,
@@ -27,13 +46,15 @@ void FOdysseyRuntimeToolAlgorithms::DrawLine(
 	const FIntPoint& End,
 	const FOdysseyRuntimeToolSettings& Settings,
 	bool bEraserMode,
-	float& InOutDistanceSinceLastStamp)
+	float& InOutDistanceSinceLastStamp,
+	FIntRect* OutDirtyRegion)
 {
 	if (Width <= 0 || Height <= 0 || Pixels.Num() != Width * Height)
 	{
-		return;
+		return false;
 	}
 
+	FIntRect DirtyRegion(0, 0, 0, 0);
 	const float Spacing = FMath::Max(1.0f, Settings.FreehandStep);
 	InOutDistanceSinceLastStamp = FMath::Clamp(InOutDistanceSinceLastStamp, 0.0f, Spacing);
 
@@ -45,9 +66,16 @@ void FOdysseyRuntimeToolAlgorithms::DrawLine(
 	{
 		if (InOutDistanceSinceLastStamp <= KINDA_SMALL_NUMBER)
 		{
-			DrawDisc(Pixels, Width, Height, Start, Settings, bEraserMode);
+			if (DrawDisc(Pixels, Width, Height, Start, Settings, bEraserMode, &DirtyRegion))
+			{
+				if (OutDirtyRegion)
+				{
+					*OutDirtyRegion = DirtyRegion;
+				}
+				return true;
+			}
 		}
-		return;
+		return false;
 	}
 
 	const FVector2D Direction = Segment / SegmentLength;
@@ -62,8 +90,12 @@ void FOdysseyRuntimeToolAlgorithms::DrawLine(
 	{
 		const int32 X = FMath::RoundToInt(static_cast<float>(Start.X) + Direction.X * DistanceAlong);
 		const int32 Y = FMath::RoundToInt(static_cast<float>(Start.Y) + Direction.Y * DistanceAlong);
-		DrawDisc(Pixels, Width, Height, FIntPoint(X, Y), Settings, bEraserMode);
-		++DrawnCount;
+		FIntRect DiscRegion(0, 0, 0, 0);
+		if (DrawDisc(Pixels, Width, Height, FIntPoint(X, Y), Settings, bEraserMode, &DiscRegion))
+		{
+			IncludeDirtyRegion(DirtyRegion, DiscRegion);
+			++DrawnCount;
+		}
 	}
 
 	if (DrawnCount > 0)
@@ -78,6 +110,17 @@ void FOdysseyRuntimeToolAlgorithms::DrawLine(
 	{
 		InOutDistanceSinceLastStamp = FMath::Min(Spacing, InOutDistanceSinceLastStamp + SegmentLength);
 	}
+
+	if (DirtyRegion.Width() <= 0 || DirtyRegion.Height() <= 0)
+	{
+		return false;
+	}
+
+	if (OutDirtyRegion)
+	{
+		*OutDirtyRegion = DirtyRegion;
+	}
+	return true;
 }
 
 bool FOdysseyRuntimeToolAlgorithms::FloodFill(
@@ -144,13 +187,14 @@ bool FOdysseyRuntimeToolAlgorithms::FloodFill(
 	return true;
 }
 
-void FOdysseyRuntimeToolAlgorithms::DrawDisc(
+bool FOdysseyRuntimeToolAlgorithms::DrawDisc(
 	TArray<FColor>& Pixels,
 	int32 Width,
 	int32 Height,
 	const FIntPoint& Center,
 	const FOdysseyRuntimeToolSettings& Settings,
-	bool bEraserMode)
+	bool bEraserMode,
+	FIntRect* OutDirtyRegion)
 {
 	const float Radius = FMath::Max(0.5f, Settings.Size * 0.5f);
 	const float RadiusSq = Radius * Radius;
@@ -167,9 +211,10 @@ void FOdysseyRuntimeToolAlgorithms::DrawDisc(
 	const float BaseOpacity = FMath::Clamp(Settings.Opacity, 0.0f, 1.0f);
 	if (BaseOpacity <= KINDA_SMALL_NUMBER)
 	{
-		return;
+		return false;
 	}
 
+	bool bDrewAnyPixel = false;
 	for (int32 Y = MinY; Y <= MaxY; ++Y)
 	{
 		for (int32 X = MinX; X <= MaxX; ++X)
@@ -192,8 +237,20 @@ void FOdysseyRuntimeToolAlgorithms::DrawDisc(
 
 			const int32 Index = ToIndex(Width, X, Y);
 			BlendPixel(Pixels[Index], SourceColor, BaseOpacity * Falloff, bEraserMode);
+			bDrewAnyPixel = true;
 		}
 	}
+
+	if (!bDrewAnyPixel)
+	{
+		return false;
+	}
+
+	if (OutDirtyRegion)
+	{
+		*OutDirtyRegion = FIntRect(MinX, MinY, MaxX + 1, MaxY + 1);
+	}
+	return true;
 }
 
 void FOdysseyRuntimeToolAlgorithms::BlendPixel(FColor& Dest, const FLinearColor& Source, float Weight, bool bEraserMode)

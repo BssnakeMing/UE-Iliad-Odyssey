@@ -35,7 +35,7 @@ public:
     UOdysseyRuntimePaintViewModel* GetViewModel() const { return ViewModel; }
     
     UFUNCTION(BlueprintPure, Category = "Odyssey|Paint")
-    UOdysseyBrushAssetBase* GetPaintEngineBrushAsset() const { return PaintEngine.GetBrushAsset();}
+    UOdysseyBrushAssetBase* GetPaineEngineBrushAsset() const { return PaintEngine.GetBrushAsset(); }
 
     UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
     void BeginStroke(const FVector2D& LocalPosition);
@@ -60,6 +60,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
     void SetPaintTexture(UTextureRenderTarget2D* InPaintTexture);
+    
+    UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
+    void SetCustomPressure(float pressure);
 
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -113,9 +116,14 @@ private:
     FVector2D LastSurfaceSize = FVector2D::ZeroVector;
     FOdysseyRuntimePaintEngine PaintEngine;
     TSharedPtr<SOdysseyPaintSurface> PaintSurface;
+    TWeakObjectPtr<UTextureRenderTarget2D> BoundPaintSurfaceTexture;
     FDelegateHandle ViewModelToolChangedHandle;
     FDelegateHandle ViewModelToolSettingsChangedHandle;
     FDelegateHandle ViewModelBrushPresetChangedHandle;
     FDelegateHandle ViewModelBrushPresetsChangedHandle;
     bool bApplyingViewModel = false;
+    
+    // 提供状态查询：是否绘制中
+    UPROPERTY(BlueprintReadOnly, Category = "Odyssey|Paint", meta = (AllowPrivateAccess = "true"))
+    bool Strokeing = false;
 };

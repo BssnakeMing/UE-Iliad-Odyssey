@@ -88,8 +88,24 @@ void UOdysseyRuntimePaintCanvas::CommitToTexture()
 		return;
 	}
 
+	CommitToTextureRegion(FIntRect(0, 0, Width, Height));
+}
+
+void UOdysseyRuntimePaintCanvas::CommitToTextureRegion(const FIntRect& InRegion)
+{
+	if (!IsInitialized())
+	{
+		return;
+	}
+
 	EnsureTexture();
 	if (!Texture)
+	{
+		return;
+	}
+
+	const FIntRect Region = ClampRegion(InRegion);
+	if (Region.Width() <= 0 || Region.Height() <= 0)
 	{
 		return;
 	}
@@ -106,9 +122,26 @@ void UOdysseyRuntimePaintCanvas::CommitToTexture()
 		return;
 	}
 
-	TArray<FColor> UploadData = PixelData;
-	const uint32 SourcePitch = static_cast<uint32>(Width * sizeof(FColor));
-	const FUpdateTextureRegion2D UpdateRegion(0, 0, 0, 0, static_cast<uint32>(Width), static_cast<uint32>(Height));
+	TArray<FColor> UploadData;
+	UploadData.SetNumUninitialized(Region.Width() * Region.Height());
+	for (int32 Row = 0; Row < Region.Height(); ++Row)
+	{
+		const int32 SourceIndex = (Region.Min.Y + Row) * Width + Region.Min.X;
+		const int32 DestIndex = Row * Region.Width();
+		FMemory::Memcpy(
+			UploadData.GetData() + DestIndex,
+			PixelData.GetData() + SourceIndex,
+			Region.Width() * sizeof(FColor));
+	}
+
+	const uint32 SourcePitch = static_cast<uint32>(Region.Width() * sizeof(FColor));
+	const FUpdateTextureRegion2D UpdateRegion(
+		static_cast<uint32>(Region.Min.X),
+		static_cast<uint32>(Region.Min.Y),
+		0,
+		0,
+		static_cast<uint32>(Region.Width()),
+		static_cast<uint32>(Region.Height()));
 
 	ENQUEUE_RENDER_COMMAND(OdysseyRuntimePaintCanvasUpload)(
 		[RenderTargetTexture, UploadData = MoveTemp(UploadData), SourcePitch, UpdateRegion](FRHICommandListImmediate& RHICmdList) mutable
@@ -126,6 +159,15 @@ void UOdysseyRuntimePaintCanvas::CommitToTexture()
 				SourcePitch,
 				reinterpret_cast<const uint8*>(UploadData.GetData()));
 		});
+}
+
+FIntRect UOdysseyRuntimePaintCanvas::ClampRegion(const FIntRect& InRegion) const
+{
+	const int32 MinX = FMath::Clamp(InRegion.Min.X, 0, Width);
+	const int32 MinY = FMath::Clamp(InRegion.Min.Y, 0, Height);
+	const int32 MaxX = FMath::Clamp(InRegion.Max.X, 0, Width);
+	const int32 MaxY = FMath::Clamp(InRegion.Max.Y, 0, Height);
+	return FIntRect(MinX, MinY, MaxX, MaxY);
 }
 
 void UOdysseyRuntimePaintCanvas::EnsureTexture()

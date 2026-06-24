@@ -39,6 +39,8 @@ public:
     void Clear(const FLinearColor& InColor);
     bool Undo();
     bool Redo();
+    
+    void SetCustomPressure(const float& InPressure);
 
 private:
     bool EnsureCanvas() const;
@@ -54,6 +56,9 @@ private:
     bool BeginShapeStroke(const FOdysseyPoint& StartPoint);
     void ApplyBrushAssetStroke(const FIntPoint& Point);
     void SyncBlockToCanvasPixels();
+    static void HandleWorkingBlockInvalidated(const ::ULIS::FBlock* InBlock, const ::ULIS::FRectI* InRects, const uint32 InNumRects, void* InInfo);
+    FIntRect ToCanvasRegion(const ::ULIS::FRectI& InRect) const;
+    FIntRect ToMergedCanvasRegion(const TArray<::ULIS::FRectI>& InRects) const;
     FOdysseyPoint MakePointFromPixel(const FIntPoint& Point, const FOdysseyPoint* PreviousPoint = nullptr) const;
     void RestoreWorkingBlockFromStrokeStart();
     void HandleFreehandPathBegin(const FOdysseyPoint& Point);
@@ -82,8 +87,11 @@ private:
     TStrongObjectPtr<UOdysseyFreehandShape> FreehandShape;
     TUniquePtr<FOdysseyBrushViewportContext> BrushViewportContext;
     TSharedPtr<::ULIS::FBlock, ESPMode::ThreadSafe> BrushWorkingBlock;
+    TArray<::ULIS::FRectI> BrushDirtyRects;
     TOptional<FOdysseyPoint> LastBrushPoint;
     TArray<FColor> StrokeStartPixels;
     bool bShapeStrokeActive = false;
     bool bToolSettingsApplied = false;
+    
+    float CustomPressure = 1.0f;
 };

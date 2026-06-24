@@ -29,6 +29,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
     bool SelectPreviousBrush();
+    
+    UFUNCTION(BlueprintCallable, Category = "Odyssey|Paint")
+    UOdysseyBrushAssetBase* GetBrushAsset();
 
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
